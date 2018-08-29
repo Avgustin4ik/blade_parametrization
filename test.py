@@ -4,8 +4,12 @@ from vertex import *
 
 xTop = [0,1,2,3,4,5]
 yTop = [4,4.5,5,5.5,6,6.5]
-xBottom = [-1,0,1,2,3,4]
-yBottom = [i * -1 for i in yTop]
+# xBottom = [-1,0,1,2,3,4]
+# yBottom = [i * -1 for i in yTop]
+xBottom = [i for i in range (-1,9)]
+yBottom = [-0.5*i-3 for i in range (-1,9)]
+
+
 class Function(object):
     topLine = []
     bottomLine = []
@@ -64,32 +68,33 @@ def plotline(k,b,x1,x2):
     y.append(x2*k + b)
     return x,y
 
-# def findCentr():
-#     eps = 1e-3
-#     a = 0
-#     b = len(xBottom)-1
-#     x = math.floor((a+b)/2)
-#     if f(x)[0]<eps:
-#         return f(x)
-#     if abs(f(x)[0]*f(a)[0] < 0):
-#         b = x
-#     else:
-#         a = x
-#     xn = math.floor((a+b)/2)
-#     while abs(f(x)[0] - f(xn)[0])>eps:
-#         x = xn
-#         if f(x)[0]<eps:
-#             return f(x)
-#         if abs(f(x)[0]*f(a)[0] < 0):
-#             b = x
-#         else:
-#             a = x
-#         xn = math.floor((a+b)/2)
-#     return f(xn)
+def findCentr(someFunction,x):
+    f = someFunction
+    eps = 1e-3
+    a = 0
+    b = len(xBottom)-1
+    x = math.floor((a+b)/2)
+    if f(x)[0]<eps:
+        return f(x)
+    if abs(f(x)[0]*f(a)[0] < 0):
+        b = x
+    else:
+        a = x
+    xn = math.floor((a+b)/2)
+    while abs(f(x)[0] - f(xn)[0])>eps:
+        x = xn
+        if f(x)[0]<eps:
+            return f(x)
+        if abs(f(x)[0]*f(a)[0] < 0):
+            b = x
+        else:
+            a = x
+        xn = math.floor((a+b)/2)
+    return f(xn)
 topData = [Vertex(xTop[i],yTop[i]) for i in range(len(xTop))]
-bottomData = [Vertex(xBottom[i],yBottom[i]) for i in range(len(xTop))]
+bottomData = [Vertex(xBottom[i],yBottom[i]) for i in range(len(xBottom))]
 f = Function(topData,bottomData,2)
-res,r1,r2,centr = f.value(3)
+res,r1,r2,centr = findCentr(f.value,3)
 
 plt.figure()
 plt.grid()
@@ -103,11 +108,4 @@ n1x,n1y = plotline(kr1,br1,xTop[0],xTop[-1])
 n2x,n2y = plotline(kr2,br2,xBottom[0],xBottom[-1])
 plt.plot(n1x,n1y)
 plt.plot(n2x,n2y)
-# plt.scatter(p2.x,p2.y)
-# x,y = plotline(kr2,br2,2.5,xTop[-1])
-# plt.plot(x,y)
-# res = f(2)
-# plt.scatter(centr[3].x,centr[3].y)
-# x,y = plotline(kr1,br1,2.5,xTop[-1])
-# plt.plot(x,y)
 plt.show()
