@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate
 from vertex import *
-import math
+# import mathscipy
 def Reading(fileName):
     with open(fileName) as file:
         data = file.readlines()
@@ -47,15 +47,21 @@ sorting(xy1,0)
 x1 = np.array(xy1[0])
 y1 = np.array(xy1[1])
 tck1 = interpolate.splrep(x1,y1)
-x1n = np.arange(0, 1, 0.01)
+BSpline = interpolate.BSpline(tck1[0],tck1[1],tck1[2])
+a = BSpline.__call__([0.5])
+a = BSpline(0.5)
+dtSpline = BSpline.derivative(1)
+dt = dtSpline(0.5)
+temp = interpolate.splev([0.5],tck1)
+
+x1n = np.arange(0, 1, 0.00001)
 y1n = interpolate.splev(x1n, tck1, der=0)
 sorting(xy2,0)
 x2 = np.array(xy2[0])
 y2 = np.array(xy2[1])
 tck2 = interpolate.splrep(x2,y2)
-x2n = np.arange(0,1,0.01)
+x2n = np.arange(0,1,0.00001)
 y2n = interpolate.splev(x2n,tck2,der=0)
-
 def getMidPoint(v1,v2):
     vec = getVectorFromPoints(v1,v2)
     vec.setLength(v1.length(v2)/2)
@@ -123,13 +129,12 @@ xx1,yy1 = plotline(kr1,br1,0,1)
 plt.scatter(topPoint.x,topPoint.y)
 
 # xx2,yy2 = plotline(kr2,br2,0,1)
-plt.plot(xx1,yy1)
-# plt.plot(xx2,yy2)
-plt.scatter(x1,y1)
-plt.scatter(x2,y2)
-plt.scatter(result[3].x,result[3].y)
-plt.plot(x1n, y1n)
-plt.plot(x2n, y2n)
-plt.show()
+# plt.plot(xx1,yy1)
+# plt.scatter(x1,y1)
+# plt.scatter(x2,y2)
+# plt.scatter(result[3].x,result[3].y)
+# plt.plot(x1n, y1n)
+# plt.plot(x2n, y2n)
+# plt.show()
 
 z = 0

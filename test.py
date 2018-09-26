@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 from vertex import *
-
+from usinglibs import x1n,y1n,x2n,y2n
 xTop = [0,1,2,3,4,5]
 yTop = [4,4.5,5,5.5,6,6.5]
 # xBottom = [-1,0,1,2,3,4]
@@ -45,8 +45,10 @@ def getMidPoint(v1,v2):
     vec = getVectorFromPoints(v1,v2)
     vec.setLength(v1.length(v2)/2)
     return v1.move(vec)
-kr1,br1 = getNormalLineKB(Vertex(xTop[2],yTop[2]),Vertex(xTop[3],yTop[3]), False)
-kr2,br2 = getNormalLineKB(Vertex(xBottom[1],yBottom[1]),Vertex(xBottom[2],yBottom[2]),True)
+
+# kr1,br1 = getNormalLineKB(Vertex(xTop[2],yTop[2]),Vertex(xTop[3],yTop[3]), False)
+# kr2,br2 = getNormalLineKB(Vertex(xBottom[1],yBottom[1]),Vertex(xBottom[2],yBottom[2]),True)
+
 # def f(x):
 #     vL2 = Vertex(x2n[x],y2n[x])            
 #     vR2 = Vertex(x2n[x+1],y2n[x+1])
@@ -67,7 +69,6 @@ def plotline(k,b,x1,x2):
     y.append(x1*k + b)
     y.append(x2*k + b)
     return x,y
-
 def findCentr(someFunction,x):
     f = someFunction
     eps = 1e-3
@@ -91,21 +92,56 @@ def findCentr(someFunction,x):
             a = x
         xn = math.floor((a+b)/2)
     return f(xn)
-topData = [Vertex(xTop[i],yTop[i]) for i in range(len(xTop))]
-bottomData = [Vertex(xBottom[i],yBottom[i]) for i in range(len(xBottom))]
-f = Function(topData,bottomData,2)
-res,r1,r2,centr = findCentr(f.value,3)
-
+# topData = [Vertex(xTop[i],yTop[i]) for i in range(len(xTop))]
+# bottomData = [Vertex(xBottom[i],yBottom[i]) for i in range(len(xBottom))]
+topData = [Vertex(x2n[i],y2n[i]) for i in range(len(x1n))]
+bottomData = [Vertex(x1n[i],y1n[i]) for i in range(len(x2n))]
+initialIndex = 50000
+f = Function(topData,bottomData,initialIndex)
+# res,r1,r2,centr = findCentr(f.value,3)
+i = 0
+r1n = []
+r2n = []
+y_Result = []
+x_iteration = []
+def getRange(currentIndex):
+    pass
+plt.figure()
+for i in range(initialIndex-1000,initialIndex+1000):
+    plt.clf()
+    res,r1,r2,centr = f.value(i)
+    r1n.append(f.value(i)[1])
+    r2n.append(f.value(i)[2])
+    i+=1
+    if f.value(i)[0]<1e-3:
+        finalIndex = i
+        break
+    # ploting 
+        # kr1,br1 = getNormalLineKB(topData[5000],topData[5001],False)
+        # kr2,br2 = getNormalLineKB(bottomData[i],bottomData[i+1],True)
+        # xx2,yy2 = plotline(kr2,br2,x1n[i]-0.1,x1n[i+1]+0.1)
+        # xx1,yy1 = plotline(kr1,br1,x2n[5000]-0.1,x2n[5001]+0.1)
+    plt.subplot(1,2,1)
+    plt.grid()
+    plt.axis('equal')
+    plt.plot(x1n,y1n)
+    plt.plot(x2n,y2n)
+    # plt.plot(xx1,yy1)
+    # plt.plot(xx2,yy2)
+    plt.scatter(centr.x,centr.y)
+    plt.subplot(1,2,2)
+    y_Result.append(res)
+    x_iteration.append(i)
+    plt.plot(x_iteration,y_Result)
+    plt.pause(0.001)
 plt.figure()
 plt.grid()
 plt.axis('equal')
-plt.plot(xTop,yTop)
-plt.plot(xBottom,yBottom)
-plt.scatter(xTop,yTop)
-plt.scatter(xBottom,yBottom)
+plt.plot(x1n,y1n)
+plt.plot(x2n,y2n)
 plt.scatter(centr.x,centr.y)
-n1x,n1y = plotline(kr1,br1,xTop[0],xTop[-1])
-n2x,n2y = plotline(kr2,br2,xBottom[0],xBottom[-1])
-plt.plot(n1x,n1y)
-plt.plot(n2x,n2y)
+# n1x,n1y = plotline(kr1,br1,xTop[0],xTop[-1])
+# n2x,n2y = plotline(kr2,br2,xBottom[0],xBottom[-1])
+# plt.plot(n1x,n1y)
+# plt.plot(n2x,n2y)
 plt.show()
