@@ -64,6 +64,9 @@ suctionSpline = interpolate.BSpline(tck1[0],tck1[1],tck1[2])
 pressureSpline = interpolate.BSpline(tck2[0],tck2[1],tck2[2])
 dtSuctionSpline = suctionSpline.derivative()
 dtPressureSpline = pressureSpline.derivative()
+ddt = pressureSpline.derivative(2)
+k = ddt(0.5)
+r = sqrt(2)*(4+3*k)/8
 # Custom classes and functions
 def getLineKB(vertex1, vertex2):
     k = (vertex2.y - vertex1.y)/(vertex2.x - vertex1.x)
@@ -122,6 +125,7 @@ class objectiveFunction(object):
         self.centr = centr
         self.res.append(math.fabs(r1-r2))
         self.lastX = x
+                   
         return math.fabs(r2-r1),r1,r2,centr,self.lastX
     def justValue(self,x):
         return self.value(x)[0]
@@ -143,6 +147,7 @@ class objectiveFunction(object):
         # plt.show()
     def setInialX(self,x):
         self.xInit = x
+
 def dihotomia(a,b,f,dx):
     while math.fabs(a-b)>1e-6:
         x = (a+b)/2
@@ -169,37 +174,99 @@ def newtons_method(x0, f, e):
         if abs(x1 - x0) < e:
             return x1
         x0 = x1    
-xData = 0.1
+xData = 0.9
 dxData = 0.01
 k1,b1 = getNormal(suctionSpline,xData)
-xx,yy = plotline(k1,b1,xData-dxData,xData+dxData)
-f = objectiveFunction(suctionSpline,pressureSpline,xData)
-a = 0.0
-b = 1.0
-# result,x = dihotomia(0.0,1.0,f,0.001)
+    # v lob
+def vecFunction(X):
+    x0 = X[0]
+    y0 = X[1]
+    x2 = X[2]
+    y2 = pressureSpline(x2)
+    k2,b2 = getNormal(pressureSpline,x2,True)
 
-# result = half_divide_method(a,b,f.justValue)
-dataXarray = [i/10 for i in range(1,9,1)]
+    R = X[3]
+    A = -2*x0
+    B = -2*y0
+    C = R**2 + x0**2 +y0**2
+    # return [k1*x0 + b1 - y0,
+    # k2*x2 + b2 - y2,
+    # # k2*x0 + b2 - y0
+    # (y1 - y0)**2 + (x1 - x0)**2 - (y2-y0)**2 - (x2-x0)**2]
+    return [
+        # (A/2+x1)*x0+(B/2+y1)*y0+(A/2*x1+B/2*y1+C),
+    (A/2+x2)*x0+(B/2+y2)*y0+(A/2*x2+B/2*y2+C),
+    k2*x0+b2-y0,
+    (y1-y0)**2 + (x1-x0)**2 - (y2-y0)**2 - (x2-x0)**2,
+    k1*x0+b1-y0
+    ]
+# data = [i/50 for i in range(1,50,1)]
+data = np.arange(0.1,1,0.1)
 points = []
-for i in dataXarray:
-    x0 = i
-    f = objectiveFunction(suctionSpline,pressureSpline,x0)
+x2 = []
+Radiuses = []
+for i in data:
+    k1,b1 = getNormal(suctionSpline,i)
+    x1 = i
+    y1 = suctionSpline(x1)
+    # # приближение для x2
+    # # def f(x):
+    # #     x2_temp = x[0]
+    # #     y2_temp = x[1]
+    # #     return [y2_temp - pressureSpline(x2_temp),
+    # #     k1 * x2_temp + b1 - y2_temp]
+    # # temp = scipy.optimize.root(f,[i,pressureSpline(i)])
+    X = [i,(suctionSpline(i)+pressureSpline(i))/2.0,i,(suctionSpline(i)+pressureSpline(i))/2]
+    sol = scipy.optimize.root(vecFunction,X)
+    print(sol.x)
+    x2.append(sol.x[2]) 
+    points.append(Vertex(sol.x[0],sol.x[1]))
+    R = sqrt((x1 - sol.x[0])**2 + (y1 - sol.x[1])**2)
+    Radiuses.append(R)
+x1 = data
+y1 = suctionSpline(data)
+y2 = pressureSpline(x2)
+    # v lob
+xx,yy = plotline(k1,b1,xData-dxData,xData+dxData)
+# f = objectiveFunction(suctionSpline,pressureSpline,xData)
+# a = 0.0
+# b = 1.0
+# res = newtons_method(0.5,f.justValue,1e-6)
+# c = f.value(f.lastX)
+# # result,x = dihotomia(0.0,1.0,f,0.001)
+
+# # result = half_divide_method(a,b,f.justValue)
+# dataXarray = [i/10 for i in range(1,9,1)]
+# points = []
+# for i in dataXarray:
+#     x0 = i
+#     f = objectiveFunction(suctionSpline,pressureSpline,x0)
     
-    res = minimize(f.justValue,x0, method='nelder-mead',options={'xtol':1e-5,'disp':True})
-    # result = newtons_method(x0,f.justValue,1e-8)
-    points.append(f.centr)
-# def removeError(data):
-#     for i in range(len(data)):
-#         if data
-# x = f.lastX
-# k2,b2 = getNormal(pressureSpline, x)
-# xxp,yyp = plotline(k2,b2,x-dxData,x+dxData)
-plt.figure()
+#     res = minimize(f.justValue,x0, method='nelder-mead',options={'xtol':1e-6,'disp':True})
+#     # result = newtons_method(x0,f.justValue,1e-8)
+#     points.append(f.centr)
+# # def removeError(data):
+# #     for i in range(len(data)):
+# #         if data
+# # x = f.lastX
+# # k2,b2 = getNormal(pressureSpline, x)
+# # xxp,yyp = plotline(k2,b2,x-dxData,x+dxData)
+fig = plt.figure()
 plt.axis('equal')
 plt.grid()
-# point = f.centr
+circles = []
 for i in points:
     plt.scatter(i.x,i.y, c="green", marker='x')
+plt.scatter(x1,y1)
+plt.scatter(x2,y2)
+for i in range(len(points)):
+    r = Radiuses[i]
+    c = points[i]
+    
+    t = np.arange(0,2*np.pi,.01)
+    x = [math.cos(i)*r + c.x for i in t]
+    y = [math.sin(i)*r + c.y for i in t]
+    plt.plot(x,y)
 # plt.scatter(point.x,point.y)
 # plt.scatter(x,pressureSpline(x))
 plt.plot(x1n,y1n,'r')
