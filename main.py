@@ -201,56 +201,64 @@ def vecFunction(X):
     k1*x0+b1-y0
     ]
 # data = [i/50 for i in range(1,50,1)]
-data = np.arange(0.1,1,0.1)
+data = np.arange(0.0,1,0.01)
 points = []
 x2 = []
 Radiuses = []
-for i in data:
-    k1,b1 = getNormal(suctionSpline,i)
-    x1 = i
-    y1 = suctionSpline(x1)
-    # # приближение для x2
-    # # def f(x):
-    # #     x2_temp = x[0]
-    # #     y2_temp = x[1]
-    # #     return [y2_temp - pressureSpline(x2_temp),
-    # #     k1 * x2_temp + b1 - y2_temp]
-    # # temp = scipy.optimize.root(f,[i,pressureSpline(i)])
-    X = [i,(suctionSpline(i)+pressureSpline(i))/2.0,i,(suctionSpline(i)+pressureSpline(i))/2]
-    sol = scipy.optimize.root(vecFunction,X)
-    print(sol.x)
-    x2.append(sol.x[2]) 
-    points.append(Vertex(sol.x[0],sol.x[1]))
-    R = sqrt((x1 - sol.x[0])**2 + (y1 - sol.x[1])**2)
-    Radiuses.append(R)
-x1 = data
-y1 = suctionSpline(data)
-y2 = pressureSpline(x2)
+# for i in data:
+#     k1,b1 = getNormal(suctionSpline,i)
+#     x1 = i
+#     y1 = suctionSpline(x1)
+#     # # приближение для x2
+#     # def f(x):
+#     #     x2_temp = x[0]
+#     #     y2_temp = x[1]
+#     #     return [y2_temp - pressureSpline(x2_temp),
+#     #     k1 * x2_temp + b1 - y2_temp]
+#     # temp = scipy.optimize.root(f,[i,pressureSpline(i)])
+#     # X = [i,(suctionSpline(i)+pressureSpline(i))/2.0,temp.x[1],(suctionSpline(i)+pressureSpline(i))/2]
+#     X = [i,(suctionSpline(i)+pressureSpline(i))/2.0,i,(suctionSpline(i)+pressureSpline(i))/2]
+#     sol = scipy.optimize.root(vecFunction,X)
+#     print(sol.x)
+#     x2.append(sol.x[2]) 
+#     points.append(Vertex(sol.x[0],sol.x[1]))
+#     R = sqrt((x1 - sol.x[0])**2 + (y1 - sol.x[1])**2)
+#     Radiuses.append(R)
+# x1 = data
+# y1 = suctionSpline(data)
+# y2 = pressureSpline(x2)
+
+    # inlet circle fitting
+xInlet = np.arange(0.2,-0.01,-0.01)
+yInlet = np.array(pressureSpline(xInlet))
+yInlet = np.append(yInlet,np.array(suctionSpline(np.arange(0,0.21,0.01))))
+xInlet = np.append(xInlet,np.arange(0,0.21,0.01))
+dataInlet = np.array([xInlet,yInlet])
+
+# sorting(dataInlet,0)
+tckInlet,u = interpolate.splprep([dataInlet[0],dataInlet[1]],s=0,nest=-1)
+uInlet = np.arange(0,1.01,0.01)
+vInlet = interpolate.splev(uInlet,tckInlet)
+dx,dy = interpolate.splev(uInlet,tckInlet,der=1)
+ddx,ddy = interpolate.splev(uInlet,tckInlet,der=2)
+    #from stackoverflow
+# t = [0]
+# for i in range(1, len(vInlet[0])):
+#     t.append(t[i-1]+np.hypot(vInlet[0][i]-vInlet[0][i-1], vInlet[1][i]-vInlet[1][i-1]))
+# t = [i/t[-1] for i in t]# а какой смысл?
+plt.figure()
+plt.subplot(131)
+plt.axis('equal')
+# plt.plot(dataInlet[0],dataInlet[1])
+plt.plot(vInlet[0],vInlet[1])
+plt.subplot(132)
+plt.plot(dx,dy)
+plt.subplot(133)
+# plt.plot(ddx,ddy)
+plt.plot(t,curvatureSpline)
+plt.show()
     # v lob
 xx,yy = plotline(k1,b1,xData-dxData,xData+dxData)
-# f = objectiveFunction(suctionSpline,pressureSpline,xData)
-# a = 0.0
-# b = 1.0
-# res = newtons_method(0.5,f.justValue,1e-6)
-# c = f.value(f.lastX)
-# # result,x = dihotomia(0.0,1.0,f,0.001)
-
-# # result = half_divide_method(a,b,f.justValue)
-# dataXarray = [i/10 for i in range(1,9,1)]
-# points = []
-# for i in dataXarray:
-#     x0 = i
-#     f = objectiveFunction(suctionSpline,pressureSpline,x0)
-    
-#     res = minimize(f.justValue,x0, method='nelder-mead',options={'xtol':1e-6,'disp':True})
-#     # result = newtons_method(x0,f.justValue,1e-8)
-#     points.append(f.centr)
-# # def removeError(data):
-# #     for i in range(len(data)):
-# #         if data
-# # x = f.lastX
-# # k2,b2 = getNormal(pressureSpline, x)
-# # xxp,yyp = plotline(k2,b2,x-dxData,x+dxData)
 fig = plt.figure()
 plt.axis('equal')
 plt.grid()
@@ -262,7 +270,6 @@ plt.scatter(x2,y2)
 for i in range(len(points)):
     r = Radiuses[i]
     c = points[i]
-    
     t = np.arange(0,2*np.pi,.01)
     x = [math.cos(i)*r + c.x for i in t]
     y = [math.sin(i)*r + c.y for i in t]
