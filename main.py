@@ -241,43 +241,69 @@ uInlet = np.arange(0,1.01,0.01)
 vInlet = interpolate.splev(uInlet,tckInlet)
 dx,dy = interpolate.splev(uInlet,tckInlet,der=1)
 ddx,ddy = interpolate.splev(uInlet,tckInlet,der=2)
-    #from stackoverflow
-# t = [0]
-# for i in range(1, len(vInlet[0])):
-#     t.append(t[i-1]+np.hypot(vInlet[0][i]-vInlet[0][i-1], vInlet[1][i]-vInlet[1][i-1]))
-# t = [i/t[-1] for i in t]# а какой смысл?
+
+####   TRUE CODE MASTER PIECE  ####
+normals = []
+for i in range(len(dx)):
+    v = Vector(-dy[i],dx[i]).normalize().setLength(0.1)
+    normals.append(v)
+curvature = abs(dx*ddy-dy*ddx)/pow(dx*dx+dy*dy,3/2)
+####    FINDING INLET CIRCLE    ####
+r = []
+r = [-1.0/i for i in curvature]
+start = 0
+end = len(uInlet)
+# for i in range(0,len(uInlet)//2,1):
+    
+#     count = r.count(r[i])
+#     if count>3:
+#         pos = [i]
+#         start = i+1
+#         pos.append(r.index(r[i],[start,end]))
+#         start = pos + 1
+        
+        
+
 plt.figure()
-plt.subplot(131)
 plt.axis('equal')
-# plt.plot(dataInlet[0],dataInlet[1])
+plt.plot(uInlet,r)
+# plt.show()
+####   TRUE CODE MASTER PIECE  ####
+plt.figure()
+plt.subplot()
+plt.axis('equal')
 plt.plot(vInlet[0],vInlet[1])
-plt.subplot(132)
-plt.plot(dx,dy)
-plt.subplot(133)
-# plt.plot(ddx,ddy)
-plt.plot(t,curvatureSpline)
-plt.show()
-    # v lob
-xx,yy = plotline(k1,b1,xData-dxData,xData+dxData)
-fig = plt.figure()
+plt.figure()
 plt.axis('equal')
-plt.grid()
-circles = []
-for i in points:
-    plt.scatter(i.x,i.y, c="green", marker='x')
-plt.scatter(x1,y1)
-plt.scatter(x2,y2)
-for i in range(len(points)):
-    r = Radiuses[i]
-    c = points[i]
-    t = np.arange(0,2*np.pi,.01)
-    x = [math.cos(i)*r + c.x for i in t]
-    y = [math.sin(i)*r + c.y for i in t]
+plt.plot(vInlet[0],vInlet[1])
+for i in range(len(dx)):
+    x = [vInlet[0][i],vInlet[0][i]+normals[i].x]
+    y = [vInlet[1][i],vInlet[1][i]+normals[i].y]
     plt.plot(x,y)
-# plt.scatter(point.x,point.y)
-# plt.scatter(x,pressureSpline(x))
-plt.plot(x1n,y1n,'r')
-plt.plot(x2n,y2n,'b')
-plt.plot(xx,yy)
-# plt.plot(xxp,yyp)
-plt.show()
+plt.figure()
+plt.plot(uInlet,curvature)
+# plt.show()
+    # v lob
+# xx,yy = plotline(k1,b1,xData-dxData,xData+dxData)
+# fig = plt.figure()
+# plt.axis('equal')
+# plt.grid()
+# circles = []
+# for i in points:
+#     plt.scatter(i.x,i.y, c="green", marker='x')
+# plt.scatter(x1,y1)
+# plt.scatter(x2,y2)
+# for i in range(len(points)):
+#     r = Radiuses[i]
+#     c = points[i]
+#     t = np.arange(0,2*np.pi,.01)
+#     x = [math.cos(i)*r + c.x for i in t]
+#     y = [math.sin(i)*r + c.y for i in t]
+#     plt.plot(x,y)
+# # plt.scatter(point.x,point.y)
+# # plt.scatter(x,pressureSpline(x))
+# plt.plot(x1n,y1n,'r')
+# plt.plot(x2n,y2n,'b')
+# plt.plot(xx,yy)
+# # plt.plot(xxp,yyp)
+# plt.show()
