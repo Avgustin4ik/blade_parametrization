@@ -1,114 +1,91 @@
-from numpy import *
-from matplotlib.pyplot import *
-from scipy import interpolate
+from scripts import *
 
-# first create a list of x,y points based on an airfoil design from
-# https://en.wikipedia.org/wiki/NACA_airfoil
-# created so that points are not uniformly distributed
-c=1.0
-th=0.15
-x=concatenate( (linspace(1.0,0.1,40),linspace(0.95,0.05,20)**3.0 *0.1 ) )
-y=5.0*th*(0.2969*np.sqrt(x/c) - 0.1260*(x/c) - 0.3516*(x/c)**2 +0.2843*(x/c)**3 - 0.1015*(x/c)**4)
+k1 = 1
+b1 = 3
+# исходная точка
+x0 =1
+y0 = k1*x0+b1
+# функция нижней линии
+def f2(x):
+      k = math.atan(-0.1)
+      b = 0
+      return k*x + b
+kr = -1
 
-x=concatenate( (x,flipud(x)))
-y=concatenate( (y,-flipud(y)))
+# - 'hybr'             :ref:`(see here) <optimize.root-hybr>`
+# - 'lm'               :ref:`(see here) <optimize.root-lm>`
+# - 'broyden1'         :ref:`(see here) <optimize.root-broyden1>`
+# - 'broyden2'         :ref:`(see here) <optimize.root-broyden2>`
+# - 'anderson'         :ref:`(see here) <optimize.root-anderson>`
+# - 'linearmixing'     :ref:`(see here) <optimize.root-linearmixing>`
+# - 'diagbroyden'      :ref:`(see here) <optimize.root-diagbroyden>`
+# - 'excitingmixing'   :ref:`(see here) <optimize.root-excitingmixing>`
+# - 'krylov'           :ref:`(see here) <optimize.root-krylov>`
+# - 'df-sane'          :ref:`(see here) <optimize.root-dfsane>`
 
+br = y0 - kr*x0
+def fun(x):
+      # return [x[1]-kr*x[0]-br,
+      # f2(x[2]) - math.atan(-0.1)*x[2] - 0,
+      # sqrt(pow(x0 - x[0],2) + pow(y0 - x[1],2)) - sqrt(pow(x[2] - x[0],2) + pow(f2(x[2]) - x[1],2))]
+      p1 = Vertex(x0,y0)
+      p2 = Vertex(x[2],f2(x[2]))
+      pr = Vertex(x[0],x[1])
+      kr2 = -1/math.atan(-0.1)
+      br2 = f2(x[2])-kr2*x[2]
+      return [
+            x[1]-kr*x[0]-br,
+            x[1]-kr2*x[0]-br2,
+            p1.length(pr)-p2.length(pr)
+      ]
+sol = scipy.optimize.root(fun,[0,1,1],method='hybr')
+# xr,yr,x2 = scipy.optimize.fsolve(fun,(5,5,5))
+print(sol.x)
+xr = sol.x[0]
+yr = sol.x[1]
+x2 = sol.x[2]
+r = sqrt(pow((x0-xr),2)+pow((y0-yr),2))
+c = Vertex(xr,yr)
 
-# create parameters. t is uniformly spaced on the interval 0 to 1. 
-# u is spaced proportional to edge lengths
-t=arange( len(x),dtype=float) / (len(x)-1)
-u=zeros( (len(x)),dtype=float)
-L=0.0
-u[0]=0.0
-for ii in range(1,len(x)):
-  L += sqrt( (x[ii]-x[ii-1])**2 + (y[ii]-y[ii-1])**2 )
-  u[ii]=L
-u /= L
-
-# create two cubic splines for each x and y
-csxt=interpolate.splrep(t,x,k=3)
-csxu=interpolate.splrep(u,x,k=3)
-csyt=interpolate.splrep(t,y,k=3)
-csyu=interpolate.splrep(u,y,k=3)
-
-# tt and uu are fine samples used for plotting
-tt=linspace(0.0,1.0,10000)
-uu=linspace(0.0,1.0,10000)
-
-
-# evaluate x(t),y(t),x(u),y(u) and their derivatives
-xt0=interpolate.splev(tt,csxt)
-xt1=interpolate.splev(tt,csxt,der=1)
-xt2=interpolate.splev(tt,csxt,der=2)
-yt0=interpolate.splev(tt,csyt)
-yt1=interpolate.splev(tt,csyt,der=1)
-yt2=interpolate.splev(tt,csyt,der=2)
-
-xu0=interpolate.splev(uu,csxu)
-xu1=interpolate.splev(uu,csxu,der=1)
-xu2=interpolate.splev(uu,csxu,der=2)
-yu0=interpolate.splev(uu,csyu)
-yu1=interpolate.splev(uu,csyu,der=1)
-yu2=interpolate.splev(uu,csyu,der=2)
-
-# calculate curvature by the formula
-# |x' y'' - y' x'' | / |x'^2 + y'^2|^3/2
-Kt=abs( xt1*yt2 - yt1*xt2) / sqrt(xt1*xt1 + yt1*yt1)**3
-Ku=abs( xu1*yu2 - yu1*xu2) / sqrt(xu1*xu1 + yu1*yu1)**3
-
-
-# interpolate between t and u, so that we can plot
-# apples to apples
-cstu=interpolate.splrep(t,u,k=1)
-uu2=interpolate.splev(tt,cstu)
-
-# plots
-ff=figure(1)
-ff.clf()
-plot(x,y,'.',markersize=6)
-gca().set_aspect('equal')
-grid('on')
-xlabel('x')
-ylabel('y')
-axis([-0.05,1.05,-0.2,0.2])
-
-ff=figure(2)
-ff.clf()
-subplot(211)
-plot(tt,xt0,'b-',label=r"$x_t(t)$")
-plot(tt,yt0,'r-',label=r"$y_t(t)$")
-grid('on')
-xlabel('t')
-legend(loc='upper right',fontsize=20)
-subplot(212)
-plot(uu,xu0,'b-',label=r"$x_u(u)$")
-plot(uu,yu0,'r-',label=r"$y_u(u)$")
-grid('on')
-xlabel('u')
-legend(loc='upper right',fontsize=20)
+plt.figure()
+plt.grid()
+plt.axis('equal')
+t = np.arange(0,2*np.pi,.01)
+x = [math.cos(i)*r + c.x for i in t]
+y = [math.sin(i)*r + c.y for i in t]
+plt.plot(x,y)
+x = np.arange(0,10,1)
+y = k1*x + b1
+YR = kr*x + br
+plt.scatter(x,y)
+plt.scatter(xr,yr)
+plt.plot(x,y,x,f2(x),x,YR)
+plt.show()
 
 
 
-ff=figure(3)
-ff.clf()
-subplot(211)
-plot(tt,xt2,'b-',label=r"$x_t''(t)$")
-plot(tt,yt2,'r-',label=r"$y_t''(t)$")
-grid('on')
-xlabel('t')
-legend(loc='upper right',fontsize=20)
-subplot(212)
-plot(uu,xu2,'b-',label=r"$x_u''(u)$")
-plot(uu,yu2,'r-',label=r"$y_u''(u)$")
-grid('on')
-xlabel('u')
-legend(loc='upper right',fontsize=20)
+from readingBlade import inletEdgePoints
+from scipy.spatial.distance import cdist
+from scipy.optimize import fmin
 
-ff=figure(4)
-ff.clf()
-plot(uu2,Kt,'b-',label=r"$\kappa_t(u)$")
-plot(uu,Ku,'r-',label=r"$\kappa_u(u)$")
-grid('on')
-xlabel('u')
-gca().set_xlim([0.4,0.6])
-legend(loc='upper right',fontsize=20)
+def FitInletEdge(X,Y):
+      X = inletEdgePoints[0]
+      Y = inletEdgePoints[1]
+
+      # Choose the inital center of fit circle as the CM
+      xm = X.mean()
+      ym = Y.mean()
+
+      # Choose the inital radius as the average distance to the CM
+      cm = np.array([xm,ym]).reshape(1,2)
+      rm = cdist(cm, np.array([X,Y]).T).mean()
+
+      # Best fit a circle to these points
+      def err(vec):
+            w = vec[0]
+            v = vec[1]
+            r = vec[2]
+            pts = [np.linalg.norm([x-w,y-v])-r for x,y in zip(X,Y)]
+            return (np.array(pts)**2).sum()
+
+      return xf,yf,rf = scipy.optimize.fmin(err,[xm,ym,rm])  
