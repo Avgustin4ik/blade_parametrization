@@ -89,3 +89,25 @@ def FitInletEdge(X,Y):
             return (np.array(pts)**2).sum()
 
       return xf,yf,rf = scipy.optimize.fmin(err,[xm,ym,rm])  
+
+
+      # write PARAMETRS
+# RInlet = r1*scaleFactor
+# ROutlet = r2*scaleFactor
+# AngleInlet = math.degrees(math.atan(float(spline_camber.derivative(nu=1)(0.0))))
+# AngleOutlet = abs(math.degrees(math.atan(float(spline_camber.derivative(nu=1)(1.0)))))
+# omega2 = 0.0
+# PARAMETRS = {   'Angle inlet':AngleInlet,
+#                 'Angle outlet':AngleOutlet,
+#                 'R inlet':r1,
+#                 'R outlet':r2,
+#                 'X Max':x_max,
+#                 'Y max':y_max,
+#                 'R Max': r_max,
+#                 'XR Max': xr_max,
+#                 'omega 1': omega1,
+#                 'omega 2': omega2,
+#                 'Angle Bend':deltaBend,
+#                 'R Bend':RBend,
+#                 'XR Bend':xr_bend}
+# Writing(fileName,PARAMETRS)

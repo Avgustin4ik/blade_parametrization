@@ -6,7 +6,14 @@ from scipy import interpolate
 from scipy.optimize import minimize
 import scipy
 from vertex import *
-
+def Writing(fileName,data):
+        fileName = fileName[:-4]
+        fileName = fileName+'_PARAMETRS.txt'
+        file = open(fileName,'w')
+        for i in data:
+                # file.write(i + '\t' + str(data[i]) + '\n')
+                file.write(str(data[i])+'\n')
+        file.close()
 def getCurvature(f,x):
     """Return a curvature value for a spline function
 
@@ -196,4 +203,21 @@ def FindTrailingEdgePoints(spline_camber,r2,centre):
         p1 = centre.move(upVec)
         p2 = centre.move(downVec)
         return p1,p2
+def FindPoint(spline_pressure,r1):
+        xCoord = np.arange(0,r1,0.01)
+        centre = Vertex(0,0)
+        def f(x):
+                value = abs(Vertex(x[0],float(spline_pressure(x[0]))).length(centre) - r1)
+                cond = pow(x[0]-r1,2)
+                return value + cond
+        result = minimize(f,0.05)
+        x = result.x
+        return Vertex(x,float(spline_pressure(x)))
 
+def FindBend(spline_suction,point):
+        def f(x):
+                return Vertex(x[0],float(spline_suction(x[0]))).length(point)
+        x = 0.1
+        sol = minimize(f,x)
+        x = float(sol.x)
+        return x,float(spline_suction.derivative(nu=1)(x))
