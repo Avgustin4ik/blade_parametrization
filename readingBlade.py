@@ -2,14 +2,14 @@ from scripts import *
 #### MAIN ####
 # ps - pressure side
 # ss - suction side
-fileName = 'c14bsp1.txt'
-points_pressure = read('c14bsp1.txt')
-points_suction = read('c14bsp2.txt')
-points_pressure = scaling(points_pressure,r1=2.6,r2=0.25,B=42.47)
-points_suction = scaling(points_suction,r1=2.6,r2=0.25,B=42.47)
+fileName = 'c918.txt'
+points_pressure = read('c9018pressure.txt')
+points_suction = read('c9018suction.txt')
+points_pressure = scaling(points_pressure,r1=3.35,r2=0.3,B=47.15)#SET PARAMETRS EVERYWHERE
+points_suction = scaling(points_suction,r1=3.35,r2=0.3,B=47.15)
 spline_suction = getSplineFromPoints(points_suction)
 spline_pressure = getSplineFromPoints(points_pressure)
-result_data = FindCamberPoints(spline_suction,spline_pressure,50,eps=1e-5,leftborderX=points_pressure[0][0],rightborder=points_pressure[0][-1],border=0.005)
+result_data = FindCamberPoints(spline_suction,spline_pressure,50,eps=1e-5,leftborderX=points_pressure[0][0],rightborder=points_pressure[0][-1],border=0.01)
 # detecting r_max,xr_max
 radius_arr = [Vertex(result_data[i][0],result_data[i][1]).length(Vertex(result_data[i][2],float(spline_pressure(result_data[i][2])))) for i in range(0,len(result_data))]
 xr_array = [i[0] for i in result_data]
@@ -24,12 +24,12 @@ points_camber = [(i[0],i[1]) for i in result_data]
 points_camber.insert(0,(0,0))
 points_camber.append((1,0))
 spline_camber = getSplineFromPoints(np.transpose(points_camber))
-r1 = 2.6
-r2 = 0.25
-B = 42.47
+r1 = 3.35
+r2 = 0.3
+B = 47.15
 sf = 1/(B-r1-r2)
 p2up,p2down = FindTrailingEdgePoints(spline_camber,r2*sf,Vertex(1,0))
-scaleFactor = 1/(42.47-2.6-0.25)
+scaleFactor = 1/(B-r1-r2)
 W = FindPoint(spline_pressure,r1*scaleFactor)
 angle = lambda x: math.degrees(math.atan(x))
 omega1= 2 * (angle(spline_camber.derivative(nu=1)(0.0))-angle(spline_pressure.derivative(nu=1)(W.x)))
@@ -44,10 +44,10 @@ rotation_angle = (90-omega1/2)*2
 rMatrix = rorate(math.radians(-rotation_angle))
 W1 = np.dot(rMatrix,[W.x,W.y])
 # detecting BEND
-angle_install = 38
-angle_scale = 2.3456854
+angle_install = 42.3
+angle_scale = 2.3456854#ERROR CORE
 angle_new = 180 - (angle_install - angle_scale)
-t_opt = 0.75
+t_opt = 0.75#RECOMMENDET
 t = t_opt*B
 if angle_new<0:
     angle_new = angle_new + 180

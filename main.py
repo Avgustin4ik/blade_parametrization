@@ -282,7 +282,7 @@ for i in range(len(dx)):
     plt.plot(x,y)
 plt.figure()
 plt.plot(uInlet,curvature)
-# plt.show()
+#plt.show()
     # v lob
 # xx,yy = plotline(k1,b1,xData-dxData,xData+dxData)
 # fig = plt.figure()
