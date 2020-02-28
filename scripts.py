@@ -7,7 +7,6 @@ from scipy.optimize import minimize
 import scipy
 from vertex import *
 def Writing(fileName,data):
-        fileName = fileName[:-4]
         fileName = fileName+'_PARAMETRS.txt'
         file = open(fileName,'w')
         for i in data:
@@ -117,7 +116,7 @@ def getSplineFromPoints(pointsArray):
         tck = interpolate.splrep(data[0],data[1])
         spline = interpolate.BSpline(tck[0],tck[1],tck[2])
         return spline
-def FindCamberPoints(spline_suction,spline_pressure,count=20,eps=1e-5,border=0.01,leftborderX=0,rightborder=1):
+def FindCamberPoints(spline_suction,spline_pressure,count=20,eps=1e-5,border=0.01,leftborderX=0.0,rightborder=1.0):
         """Return camber line
 
         Parameters
