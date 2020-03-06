@@ -4,13 +4,16 @@ from tkinter import filedialog as fd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-
 from statistics import median
 
 #### MAIN ####
 # ps - pressure side
 # ss - suction side
-
+from iapws import IAPWS97
+sat_steam=IAPWS97(P=1,x=1)                #saturated steam with known P
+sat_liquid=IAPWS97(T=370, x=0)            #saturated liquid with known T
+steam=IAPWS97(P=2.5, T=500)               #steam with known P and T
+print(sat_steam.h, sat_liquid.h, steam.h) #calculated enthalpies
 #### reading data block ####
 filename = fd.askopenfilename()
 # filename = r'W:\Geometry\C-9015А\С-9015Авог.txt'
@@ -25,7 +28,7 @@ if median(points_ps[1])>median(points_ss[1]):
     points_ss = temp
 filename = fd.askopenfilename()
 CHORD,INSTALL_ANGLE,PITCH,R_INLET,R_OUTLET = np.loadtxt(filename,skiprows=1,usecols=(0,1,2,3,4))
-inletEdgePoints = np.vstack((points_ps[0][0:5],points_ps[1][0:5]))
+inletEdgePoints = np.vstack((points_ps[0][0:3],points_ps[1][0:3]))
 result_inlet = FitInletEdge(inletEdgePoints[0],inletEdgePoints[1])
 R_INLET = result_inlet[2]
 scalefactor = 1.0/(CHORD - R_INLET - R_OUTLET)
@@ -40,7 +43,7 @@ spline_ps = getSplineFromPoints(points_ps)
 spline_ss = getSplineFromPoints(points_ss)
 
 # detecting r_max,xr_max and camber line
-res = FindCamberPoints(spline_ss,spline_ps,count=20,eps=1e-4,border=0.01,rightborder=0.9)
+res = FindCamberPoints(spline_ss,spline_ps,count=15,eps=1e-4,border=0.01,rightborder=0.9)
 radius_array = [Vertex(res[i][0],res[i][1]).length(Vertex(res[i][2],float(spline_ps(res[i][2])))) for i in range(0,len(res))]
 xr_array = [i[0] for i in res]
 points_rDistrub = np.transpose([(xr_array[i],radius_array[i]) for i in range(0,len(radius_array))])
@@ -63,10 +66,13 @@ p2up,p2down = FindTrailingEdgePoints(spline_camber,r_outlet,Vertex(1.0,0.0))
 W1 = FindPoint(spline_ps,r_inlet)
 angle = lambda x: math.degrees(math.atan(x)) if math.atan(x)>0 else math.degrees(math.atan(x)+math.pi/2.0)
 
-omega1= 2 * (angle(spline_camber.derivative(nu=1)(0.0))-angle(spline_ps.derivative(nu=1)(W1.x)))
+# omega1= 2 * (angle(spline_camber.derivative(nu=1)(0.0))-angle(spline_ps.derivative(nu=1)(W1.x)))
 k = spline_camber.derivative(nu=1)(0.0)
+k_temp,b_temp=getLineKB(Vertex(0.0,0.0),W1)
+omega1= 2 * (angle(spline_camber.derivative(nu=1)(0.0))-angle(k_temp))
 print(spline_ps.derivative(nu=1)(W1.x))
-k2 = spline_ps.derivative(nu=1)(W1.x)
+# k2 = spline_ps.derivative(nu=1)(W1.x)
+k2 = -1.0/k_temp
 b2 = W1.y-k2*W1.x
 rorate = lambda a : [[math.cos(a),math.sin(a)],[-math.sin(a),math.cos(a)]]
 rotation_angle = (90.0-omega1/2.0)*2.0
@@ -115,8 +121,8 @@ PARAMETRS = {
     '11':xr_bend,
     '12':deltaBend
 }
-# filename = fd.asksaveasfilename()
-# Writing(filename,PARAMETRS)
+filename = fd.asksaveasfilename()
+Writing(filename,PARAMETRS)
 
 plt.figure()
 ax = plt.gca()
